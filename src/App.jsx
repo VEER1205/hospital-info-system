@@ -9,6 +9,9 @@ import {
 const HospitalInfoSystem = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [currentView, setCurrentView] = useState('login');
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [patients, setPatients] = useState([
     { id: 1, name: 'John Smith', age: 45, gender: 'Male', phone: '555-0101', status: 'waiting', department: 'Cardiology', priority: 'normal', registeredAt: '09:15 AM' },
     { id: 2, name: 'Sarah Johnson', age: 32, gender: 'Female', phone: '555-0102', status: 'in-consultation', department: 'General', priority: 'urgent', registeredAt: '09:30 AM' },
@@ -22,20 +25,30 @@ const HospitalInfoSystem = () => {
   });
 
   const roles = [
-    { id: 'receptionist', name: 'Receptionist', icon: UserCheck, color: 'bg-blue-500' },
-    { id: 'doctor', name: 'Doctor', icon: Stethoscope, color: 'bg-green-500' },
-    { id: 'admin', name: 'Administrator', icon: DollarSign, color: 'bg-purple-500' }
+    { id: 'receptionist', name: 'Receptionist', icon: UserCheck, color: 'bg-blue-500', password: 'recep123' },
+    { id: 'doctor', name: 'Doctor', icon: Stethoscope, color: 'bg-green-500', password: 'doc123' },
+    { id: 'admin', name: 'Administrator', icon: DollarSign, color: 'bg-purple-500', password: 'admin123' }
   ];
 
   const handleLogin = (role) => {
-    setCurrentUser(role);
-    setCurrentView(role.id);
+    if (password === role.password) {
+      setCurrentUser(role);
+      setCurrentView(role.id);
+      setPassword('');
+      setError('');
+      setSelectedRole(null);
+    } else {
+      setError('Incorrect password. Please try again.');
+    }
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
     setCurrentView('login');
     setSelectedPatient(null);
+    setSelectedRole(null);
+    setPassword('');
+    setError('');
   };
 
   const addPatient = (patient) => {
@@ -65,23 +78,105 @@ const HospitalInfoSystem = () => {
             <Activity className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-800">Hospital Info System</h1>
-          <p className="text-gray-600 mt-2">Select your role to continue</p>
+          <p className="text-gray-600 mt-2">
+            {selectedRole ? 'Enter your password' : 'Select your role to continue'}
+          </p>
         </div>
-        <div className="space-y-3">
-          {roles.map(role => {
-            const Icon = role.icon;
-            return (
-              <button
-                key={role.id}
-                onClick={() => handleLogin(role)}
-                className={`w-full ${role.color} hover:opacity-90 text-white rounded-lg p-4 flex items-center justify-center space-x-3 transition-all transform hover:scale-105`}
-              >
-                <Icon className="w-6 h-6" />
-                <span className="text-lg font-semibold">{role.name}</span>
-              </button>
-            );
-          })}
-        </div>
+
+        {!selectedRole ? (
+          <div className="space-y-3">
+            {roles.map(role => {
+              const Icon = role.icon;
+              return (
+                <button
+                  key={role.id}
+                  onClick={() => {
+                    setSelectedRole(role);
+                    setError('');
+                  }}
+                  className={`w-full ${role.color} hover:opacity-90 text-white rounded-lg p-4 flex items-center justify-center space-x-3 transition-all transform hover:scale-105`}
+                >
+                  <Icon className="w-6 h-6" />
+                  <span className="text-lg font-semibold">{role.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div>
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg flex items-center space-x-3">
+              <div className={`w-12 h-12 ${selectedRole.color} rounded-full flex items-center justify-center`}>
+                <selectedRole.icon className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <div className="font-semibold text-gray-800">{selectedRole.name}</div>
+                <div className="text-sm text-gray-500">Login as {selectedRole.name.toLowerCase()}</div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError('');
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleLogin(selectedRole);
+                    }
+                  }}
+                  placeholder="Enter your password"
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
+                    error 
+                      ? 'border-red-300 focus:ring-red-500' 
+                      : 'border-gray-300 focus:ring-blue-500'
+                  }`}
+                  autoFocus
+                />
+                {error && (
+                  <div className="mt-2 flex items-center text-red-600 text-sm">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {error}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-xs text-blue-800 font-medium">Demo Credentials:</p>
+                <p className="text-xs text-blue-700 mt-1">
+                  Receptionist: <span className="font-mono font-semibold">recep123</span><br/>
+                  Doctor: <span className="font-mono font-semibold">doc123</span><br/>
+                  Admin: <span className="font-mono font-semibold">admin123</span>
+                </p>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => handleLogin(selectedRole)}
+                  className={`flex-1 ${selectedRole.color} hover:opacity-90 text-white py-3 rounded-lg font-semibold transition-all`}
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedRole(null);
+                    setPassword('');
+                    setError('');
+                  }}
+                  className="px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold transition-all"
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
